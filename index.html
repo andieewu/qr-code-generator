@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WiFi QR Code Generator</title>
+    <script src="assets/tailwind.js"></script>
+    <script src="assets/qrcode.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes shake {
+    
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+    
+            25% {
+                transform: translateX(-5px);
+            }
+    
+            75% {
+                transform: translateX(5px);
+            }
+        }
+    
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+    
+    </style>
+</head>
+
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col font-sans" style="font-family: 'Inter', sans-serif;">
+    
+    <div class="flex flex-col items-center w-full max-w-2xl mx-auto mt-8 px-4 sm:px-6 flex-grow">
+
+    <header class="mb-8 w-full">
+        <nav
+            class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-3 bg-gray-900 border border-gray-800 rounded-2xl shadow-lg w-full">
+            <h2 class="text-lg sm:text-xl font-bold text-white text-center sm:text-left">
+                QR Code Tools
+            </h2>
+            <div
+                class="flex overflow-x-auto space-x-2 bg-gray-800 p-1 rounded-full border border-gray-700 scrollbar-hide w-full sm:w-auto justify-center">
+                <a href="#" onclick="switchTab('wifi')" id="wifiTab"
+                    class="flex items-center gap-2 px-4 py-1.5 text-sm rounded-full font-medium bg-white text-gray-900 shadow transition whitespace-nowrap">
+                    <i data-lucide="wifi" class="w-4 h-4"></i><span>WiFi QR</span>
+                </a>
+                <a href="#" onclick="switchTab('url')" id="urlTab"
+                    class="flex items-center gap-2 px-4 py-1.5 text-sm rounded-full font-medium bg-white text-gray-900 shadow transition whitespace-nowrap">
+                    <i data-lucide="link" class="w-4 h-4"></i><span>URL QR</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+  
+        <main class="bg-gray-900 px-6 py-10 rounded-3xl shadow-2xl border border-gray-800 animate-fade-in-down w-full">
+            <h1 class="text-3xl font-bold text-center text-white mb-10 tracking-tight leading-snug" id="formTitle">
+                WiFi QR Code Generator
+            </h1>
+        
+            <form onsubmit="event.preventDefault(); generateQR();" class="space-y-6">
+                <div class="mb-5">
+                    <label for="ssid" class="block mb-2 text-sm font-medium text-white">SSID (Nama WiFi)</label>
+                    <input type="text" id="ssid" placeholder="Contoh: Dika Tampan"
+                        class="block w-full p-3 text-sm text-white border border-gray-600 rounded-lg bg-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            
+                <div class="mb-5">
+                    <label for="encryption" class="block mb-2 text-sm font-medium text-white">Jenis Enkripsi</label>
+                    <select id="encryption" onchange="togglePasswordInput()"
+                        class="block w-full p-3 text-sm text-white border border-gray-600 rounded-lg bg-gray-700 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="WPA">WPA/WPA2</option>
+                        <option value="WEP">WEP</option>
+                        <option value="nopass">Tidak Ada</option>
+                    </select>
+                </div>
+            
+                <div class="mb-5" id="passwordContainer">
+                    <label for="password" class="block mb-2 text-sm font-medium text-white">Password</label>
+                    <input type="text" id="password" placeholder="Password WiFi"
+                        class="block w-full p-3 text-sm text-white border border-gray-600 rounded-lg bg-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            
+                <button type="submit"
+                    class="w-full h-12 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-200 transition-all shadow-md flex items-center justify-center gap-2"><i data-lucide="qr-code" class="w-4 h-4"></i><span>Generate QR Code</span>
+                </button> </form>
+    
+                <form id="urlForm" onsubmit="event.preventDefault(); generateURLQR();" class="space-y-6 hidden">
+                    <div class="mb-5">
+                        <label for="urlInput" class="block mb-2 text-sm font-medium text-white">URL</label>
+                        <input type="url" id="urlInput" placeholder="https://dika-tampan.com"
+                            class="block w-full p-3 text-sm text-white border border-gray-600 rounded-lg bg-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500" />
+                    </div>
+                
+                    <button type="submit"
+                        class="w-full h-12 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-200 transition-all shadow-md flex items-center justify-center gap-2"><i data-lucide="qr-code" class="w-4 h-4"></i><span>Generate QR Code</span>
+                    </button> 
+                </form>
+
+                <div id="output" class="mt-10 hidden animate-fade-in-up">
+                    <div class="bg-gray-800 p-6 rounded-2xl shadow-inner border border-gray-700 text-center">
+                        <div id="qrcode" class="mb-4 flex justify-center"></div>
+                        <div class="flex justify-center">
+                            <button onclick="downloadQR()"
+                                class="bg-white text-gray-900 px-6 py-2 rounded-xl font-medium hover:bg-gray-200 transition shadow flex items-center gap-2">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Download QR (PNG)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+    </div>
+
+    <footer class="mt-auto mb-8 pt-8 text-center text-sm text-gray-500">
+        Dibuat karena <span class="font-semibold text-white">GABUT</span> oleh 
+        <a href="https://github.com/andieewu"><span class="font-semibold text-white">Andika Wisnumurti</span></a> &copy; 2025
+    </footer>
+
+    <script>
+
+function switchTab(tab) {
+        const wifiForm = document.querySelector("form");
+        const urlForm = document.getElementById("urlForm");
+
+        const wifiTab = document.getElementById("wifiTab");
+        const urlTab = document.getElementById("urlTab");
+
+        const formTitle = document.getElementById("formTitle");
+
+        document.getElementById("output").classList.add("hidden");
+
+        if (tab === "wifi") {
+            wifiForm.classList.remove("hidden");
+            urlForm.classList.add("hidden");
+            wifiTab.classList.add("bg-white", "text-gray-900", "shadow");
+            urlTab.classList.remove("bg-white", "text-gray-900", "shadow");
+            formTitle.textContent = "WiFi QR Code Generator";
+        } else {
+            wifiForm.classList.add("hidden");
+            urlForm.classList.remove("hidden");
+            urlTab.classList.add("bg-white", "text-gray-900", "shadow");
+            wifiTab.classList.remove("bg-white", "text-gray-900", "shadow");
+            formTitle.textContent = "URL QR Code Generator";
+        }
+    }
+
+        let currentCanvas = null;
+
+            function showWarning(message) {
+                const warningDiv = document.getElementById("warningMessage");
+                warningDiv.innerText = message;
+                warningDiv.className = "warning";
+
+                setTimeout(() => {
+                    warningDiv.className = "hidden";
+                }, 3000);
+            }
+
+            function showSuccess(message) {
+                    const successDiv = document.getElementById("successMessage");
+                    successDiv.innerText = message;
+                    successDiv.className = "success";
+
+                    setTimeout(() => {
+                        successDiv.className = "hidden";
+                    }, 3000);
+                }
+
+            function togglePasswordInput() {
+                const encryption = document.getElementById("encryption").value;
+                const passwordContainer = document.getElementById("passwordContainer");
+                encryption === "nopass"
+                    ? passwordContainer.classList.add("hidden")
+                    : passwordContainer.classList.remove("hidden");
+            }
+
+            function generateQR() {
+                const ssidEl = document.getElementById("ssid");
+                const passwordEl = document.getElementById("password");
+                const encryption = document.getElementById("encryption").value;
+
+                const ssid = ssidEl.value.trim();
+                const password = passwordEl.value.trim();
+
+                let isValid = true;
+
+                ssidEl.classList.remove("shake");
+                passwordEl.classList.remove("shake");
+
+                if (!ssid) {
+                    ssidEl.classList.add("shake");
+                    showWarning("SSID WiFi harus diisi.");
+                    isValid = false;
+                } else if (encryption !== "nopass" && !password) {
+                    passwordEl.classList.add("shake");
+                    showWarning("Password wajib diisi untuk keamanan WPA/WEP.");
+                    isValid = false;
+                }
+
+                if (!isValid) return;
+
+                let wifiString = `WIFI:T:${encryption};S:${ssid};`;
+                if (encryption !== "nopass") {
+                    wifiString += `P:${password};`;
+                }
+                wifiString += ";";
+
+                const qrDiv = document.getElementById("qrcode");
+                qrDiv.innerHTML = "";
+
+                QRCode.toCanvas(wifiString, {
+                    width: 240,              
+                    margin: 2,               
+                    color: {
+                        dark: "#000000",     
+                        light: "#FFFFFF"     
+                    }
+                }, function (err, canvas) {
+                    if (err) {
+                        showWarning("Gagal membuat QR Code.");
+                        return;
+                    }
+                    currentCanvas = canvas;
+                    qrDiv.appendChild(canvas);
+                    document.getElementById("output").classList.remove("hidden");
+                    showSuccess("QR Code berhasil dibuat!");
+                });
+         
+            }
+
+            function generateURLQR() {
+                    const urlInput = document.getElementById("urlInput");
+                    const url = urlInput.value.trim();
+
+                    urlInput.classList.remove("shake");
+
+                    if (!url) {
+                        urlInput.classList.add("shake");
+                        showWarning("URL tidak boleh kosong.");
+                        return;
+                    }
+
+                    const qrDiv = document.getElementById("qrcode");
+                    qrDiv.innerHTML = "";
+
+                    QRCode.toCanvas(url, {
+                        width: 240,
+                        margin: 2,
+                        color: {
+                            dark: "#000000",
+                            light: "#FFFFFF"
+                        }
+                    }, function (err, canvas) {
+                        if (err) {
+                            showWarning("Gagal membuat QR Code.");
+                            return;
+                        }
+                        currentCanvas = canvas;
+                        qrDiv.appendChild(canvas);
+                        document.getElementById("output").classList.remove("hidden");
+                        showSuccess("QR Code berhasil dibuat!");
+                    });
+                }
+
+        function downloadQR() {
+            if (!currentCanvas) return;
+            const link = document.createElement("a");
+            link.download = "wifi_qr.png";
+            link.href = currentCanvas.toDataURL("image/png");
+            link.click();
+        }
+
+        window.onload = () => {
+                togglePasswordInput();
+                switchTab('wifi');
+            };
+    </script>
+
+    <style>
+         @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  .shake {
+    animation: shake 0.3s ease-in-out;
+  }
+
+  .warning {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f87171;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 9999px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 50;
+    animation: fadein 0.3s ease-out;
+  }
+
+  .success {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4ade80;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 9999px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 50;
+    animation: fadein 0.3s ease-out;
+}
+
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(20px) translateX(-50%); }
+    to { opacity: 1; transform: translateY(0) translateX(-50%); }
+  }
+
+        @keyframes fade-in-down {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-down {
+            animation: fade-in-down 0.5s ease-out both;
+        }
+
+        .animate-fade-in-up {
+            animation: fade-in-up 0.5s ease-out both;
+        }
+    </style>
+
+<div id="warningMessage" class="hidden"></div>
+<div id="successMessage" class="hidden"></div>
+
+<script>
+    lucide.createIcons();
+</script>
+
+</body>
+
+</html>
