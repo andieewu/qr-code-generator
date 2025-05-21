@@ -1,4 +1,4 @@
 • HTML 5, JavaScript & Tailwind CSS
 
-Bisa diakses disini:
+Preview:
 https://andieewu.github.io/qr-code-generator/#
